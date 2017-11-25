@@ -10,8 +10,9 @@ class Go_client:
 	def __init__(self, filename, buffSize, port):
 		self.buffSize = int(buffSize)	#bits
 		self.file = filename
+		self.rano = 0
 		self.seqLen = 4 				#bits
-		self.timer = 2					#seconds
+		self.timer = 3					#seconds
 		self.term = 0.01 				#seconds
 		self.port = int(port)
 		self.host = ''
@@ -130,7 +131,10 @@ class SenderWindowManager(object):
 	def receiveAck(self, ack):
 		ackNumber = self.binaryToDecimal(ack)
 		print "Ack ", ackNumber
-		self.sequenceArray[ackNumber] = True
+		if (ackNumber == 0):
+			self.sequenceArray[ackNumber] = True
+		elif self.sequenceArray[ackNumber - 1]:
+			self.sequenceArray[ackNumber] = True
 
 	def binaryToDecimal(self, binaryString):
 		return int(binaryString, 2)
@@ -139,6 +143,9 @@ class SenderWindowManager(object):
 		currentTime = time.time()
 		result = [ ]
 		index = 0
+		while(self.sequenceArray[index]):
+			index += 1
+			
 		while( index < len(self.timerArray) ):
 			if( self.timer < (currentTime - self.timerArray[index]) ):
 				print "WindowNumber", index, " resent"
@@ -187,14 +194,14 @@ class Go_server:
 					x = 0
 					flag = False
 					for i in manager.sequenceArray:
-						if (i is False):
+						if (flag is False):
 							x = int(sequence,2)
 							break
 						else:
 							continue
 
-					if (flag is False and x % 7 ==0 ):
-						time.sleep(1)
+					if (flag is False and x % 7 == 0 ):
+						time.sleep(2)
 						flag = True
 
 					x = bin(x)[2:].zfill(4)

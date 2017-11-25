@@ -1,5 +1,5 @@
 # Implementation of the Selective Repeat algorithm
-from time import time
+import time
 import random
 import socket
 import struct
@@ -33,7 +33,7 @@ class Select_client:
 
 			print "Receiver Connected..."
 			print "Receiver address:", addr[0]
-			startTime = time()	
+			startTime = time.time()	
 			with open(self.file, "rb") as f:
 				transferred = 0
 				sock.settimeout(self.term)
@@ -58,7 +58,7 @@ class Select_client:
 					pList = manager.packetToResend()
 					while(len(pList) != 0):
 						sock.sendto(pList.pop(0), server)
-			endTime = time()
+			endTime = time.time()
 			print "Completed..."
 			print "Time elapsed :", str(endTime - startTime)
 
@@ -119,7 +119,7 @@ class SenderWindowManager(object):
 
 	def pushPacket(self, pack):
 		self.packetArray.append(pack)
-		self.timerArray.append(time())
+		self.timerArray.append(time.time())
 		self.lastSequence = (self.lastSequence +1) % self.sequenceSize
 
 	def moveWindow(self):
@@ -139,7 +139,7 @@ class SenderWindowManager(object):
 		return int(binaryString, 2)
 		
 	def packetToResend(self):
-		currentTime = time()
+		currentTime = time.time()
 		result = [ ]
 		index = 0
 		while( index < len(self.timerArray) ):
@@ -175,7 +175,7 @@ class Select_server:
 			sock.sendto("1", addr)
 
 			print "Transfer Start..."
-			startTime = time()
+			startTime = time.time()
 			with open(self.file, "a") as f:
 				received = 0
 				manager = ReceiverWindowManager(self.seqLen)
@@ -185,8 +185,10 @@ class Select_server:
 					sequence, size, buf, Checksum = pack.unpack(packet)
 					# Checks checksum and intentional errorrs
 					x += 1
-					if(not Checksum or (x % 6 == 0)):
+					if not Checksum or x % 7 == 0:
+						time.sleep(2)
 						continue
+
 
 					ack = manager.receivePacket(sequence, size, buf)
 					sock.sendto(str(ack), addr)
@@ -197,7 +199,7 @@ class Select_server:
 						received += tup[0]
 						print received, "/", fileSize,\
 						round(float(received)/fileSize*100, 2), "%"
-			endTime = time()
+			endTime = time.time()
 			print "Completed..."
 			print "Time elapsed :", str(endTime - startTime)
 		except socket.error as e:
