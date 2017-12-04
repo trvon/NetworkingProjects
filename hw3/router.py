@@ -12,6 +12,7 @@ class Router:
 		## Python Dictionary
 		## https://docs.python.org/3/tutorial/datastructures.html
 		self.table = {}
+		self.routes = {}
 
 		## Deletes entry for router in routing table
 		self.routingTable = table
@@ -28,7 +29,7 @@ class Router:
 		## https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files
 		file = open(self.file, "r")
 		newTable = {}
-
+		newTable[self.id] = 0.0
 		## Creates table from contents in file
 		for line in file:
 			line = line.split()
@@ -41,12 +42,14 @@ class Router:
 				continue
 			newTable[line[0]] = line[1]
 
-		## TODO 
-		## We need to implement method to check the cost changes within the read table
-		## but only if needed within the assignment guideline
+		# Nodes with no direct neighbor will need to find distance to that neighbor
+		for node in list(map(chr, range(97,103))):
+			if node not in newTable:
+				newTable[node] = 16
 
 		## Sets table equal to new table
 		self.table = newTable
+		# self.routes = self.table
 		# print(self.id, self.table)
 
 	## Converts table to binary to send over UDP
@@ -65,44 +68,43 @@ class Router:
 
 	## We need to implement the distance vector protocal to find the shortest path
 	## From the recieved tables broadcasted by all routers
-	def shortestPath(self):
-		foo = 1
+	def shortestPath(self, imported):
+		## Using empty dictionary generate shortest path table
+		for node in list(map(chr, range(97,103))):
+			if node in self.routes and node in imported:
+				if float(self.routes[node]) > float(imported[node]):
+					self.routes[node] = float(imported[node])
+			elif node in imported:
+				self.routes[node] = float(imported[node])
 
-	## Finds the smallest cost
+			# Path not defined
+			if self.routes[node] == 16:
+				doSomeLogic = True
 	
-	## TODO 
-	## Implement the shortestPath functionality into this logic
+	## Finds the smallest cost	
 	def cost(self):
 		self.broadcast()
 		try:
 			key, addr = self.sock.recvfrom(512)
 			if not key.decode == '1':
 				dictionary = self.binaryToTable(key)
-			# print(self.id, dictionary, addr)
 
 		except socket.timeout as e:
 			print(self.id, "Nothing recieved")
 
-		## TODO
 		## Implement check for shortest path
-
-		# self.shortestPath
-		m = 1000000		## Minimum Code, with large number to initialize with
-		pair = ''
-
-		for node in self.table:
-			if(float(m) > float(self.table[node])):
-				m = self.table[node]
-				pair = node
-		return pair
+		self.shortestPath(dictionary)
 
 		
 	def broadcast(self):
 		## Broadcast to neighbor nodes
 		for node in self.table:
+			if node is self.id:
+				continue
 			server = ('127.0.0.1', self.routingTable[node])
 			table = self.tableToBinary()
 			self.sock.sendto(table, server)
+
 
 	def run(self):
 		update = 0
@@ -114,9 +116,10 @@ class Router:
 				received = 0
 				# Timed loop instead of timeout
 				while time.time() - start < 15 and received < 5:
-					node = self.cost()
-					print(self.id, "->", node, "with cost", self.table[node])
+					self.cost()
 					received += 1
+				for node in self.routes:
+					print(self.id, "->", node, "with cost", self.table[node])
 				update += 1
 				time.sleep(15)	# Timeout
 			except KeyboardInterrupt:
