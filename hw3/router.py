@@ -10,7 +10,6 @@ class Router:
 		self.file = file
 		self.id = routerID
 		## Python Dictionary
-		## https://docs.python.org/3/tutorial/datastructures.html
 		self.table = {}
 		self.routes = {}
 
@@ -19,26 +18,19 @@ class Router:
 		del self.routingTable[self.id]
 
 		## Binds to unique port assigned
-		## https://docs.python.org/3/library/socket.html
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind(('127.0.0.1', self.port))
 		self.sock.settimeout(3)
 
 	def readFile(self):
 		## Reads file passed 
-		## https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files
 		file = open(self.file, "r")
 		newTable = {}
 		newTable[self.id] = 0.0
 		## Creates table from contents in file
 		for line in file:
 			line = line.split()
-			## We don't really need to know how many connections if the file has 
-			## all the connections.
 			if len(line) == 1:
-				## If you need to see that the line prints the amount of neighbors
-				## contained within the router table in the file
-				# print(line)
 				continue
 			newTable[line[0]] = line[1]
 
@@ -49,8 +41,6 @@ class Router:
 
 		## Sets table equal to new table
 		self.table = newTable
-		# self.routes = self.table
-		# print(self.id, self.table)
 
 	## Converts table to binary to send over UDP
 	def tableToBinary(self):
@@ -68,18 +58,20 @@ class Router:
 
 	## We need to implement the distance vector protocal to find the shortest path
 	## From the recieved tables broadcasted by all routers
-	def shortestPath(self, imported):
+	def shortestPath(self, imported, routerID):
 		## Using empty dictionary generate shortest path table
 		for node in list(map(chr, range(97,103))):
 			if node in self.routes and node in imported:
 				if float(self.routes[node]) > float(imported[node]):
 					self.routes[node] = float(imported[node])
-			elif node in imported:
-				self.routes[node] = float(imported[node])
+			elif node in imported and routerID in self.table:
+				# Adds distance from router + node distance
+				self.routes[node] = float(imported[node]) + float(self.table[routerID])
 
 			# Path not defined
-			if self.routes[node] == 16:
-				doSomeLogic = True
+			path = {}
+			#if self.routes[node] == 16:
+				
 	
 	## Finds the smallest cost	
 	def cost(self):
@@ -92,8 +84,10 @@ class Router:
 		except socket.timeout as e:
 			print(self.id, "Nothing recieved")
 
+		# Gets ID of the router that we just recieved the table from
+		routerID = [key for key in self.routingTable if self.routingTable[key] == addr[1]][0]
 		## Implement check for shortest path
-		self.shortestPath(dictionary)
+		self.shortestPath(dictionary, routerID)
 
 		
 	def broadcast(self):
