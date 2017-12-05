@@ -23,18 +23,13 @@ def router(x):
     router = Router(routerID[x], table[routerID[x]], files[x], table)
     router.run()
 
-
 # Main calling code
 p = Pool(processes=6)
 try:
     routers = [ int(i) for i in range(6) ]
     processes = p.map(router, routers)
     p.join()
-    # Accessing individual processes
-    print(processes)
 
 # Clean shutdown
 except KeyboardInterrupt:
     print("\nClean exit")
-    # for i in processes:
-    #   i.close()

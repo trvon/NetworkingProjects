@@ -9,15 +9,11 @@ class Router:
 		self.port = int(port)
 		self.file = file
 		self.id = routerID
-		## Python Dictionary
 		self.table = {}
 		self.routes = {}
-		self.path = {}
-
 		## Deletes entry for router in routing table
 		self.routingTable = table
 		del self.routingTable[self.id]
-
 		## Binds to unique port assigned
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind(('127.0.0.1', self.port))
@@ -34,12 +30,10 @@ class Router:
 			if len(line) == 1:
 				continue
 			newTable[line[0]] = line[1]
-
 		# Nodes with no direct neighbor will need to find distance to that neighbor
 		for node in list(map(chr, range(97,103))):
 			if node not in newTable:
 				newTable[node] = 16.0
-
 		## Sets table equal to new table
 		self.table = newTable
 
@@ -59,16 +53,13 @@ class Router:
 
 	def shortestPath(self, imported, routerID):
 		self.routes = self.table
-
 		## Using empty dictionary generate shortest path table
 		for node in list(map(chr, range(97,103))):
 			if node == routerID:
 				continue
-			
 			if node in imported and imported[node] != 16.0:
 				if float(self.routes[node]) > (float(imported[node]) + float(self.routes[routerID])):
 					self.routes[node] = float(imported[node]) + float(self.routes[routerID])
-
 			if node in imported and float(self.routes[node]) == 16.0:
 				# Adds distance from router + node distance
 				self.routes[node] = float(imported[node]) + float(self.routes[routerID])
@@ -82,13 +73,11 @@ class Router:
 				dictionary = self.binaryToTable(key)
 		except socket.timeout as e:
 			print(self.id, "Nothing recieved")
-
 		# Gets ID of the router that we just recieved the table from
 		routerID = [key for key in self.routingTable if self.routingTable[key] == addr[1]][0]
 		## Implement check for shortest path
 		self.shortestPath(dictionary, routerID)
 
-		
 	def broadcast(self):
 		## Broadcast to neighbor nodes
 		for node in self.table:
