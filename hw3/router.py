@@ -12,6 +12,7 @@ class Router:
 		## Python Dictionary
 		self.table = {}
 		self.routes = {}
+		self.path = {}
 
 		## Deletes entry for router in routing table
 		self.routingTable = table
@@ -37,7 +38,7 @@ class Router:
 		# Nodes with no direct neighbor will need to find distance to that neighbor
 		for node in list(map(chr, range(97,103))):
 			if node not in newTable:
-				newTable[node] = 16
+				newTable[node] = 16.0
 
 		## Sets table equal to new table
 		self.table = newTable
@@ -56,22 +57,21 @@ class Router:
 		dictionary = json.loads(jsn)
 		return dictionary
 
-	## We need to implement the distance vector protocal to find the shortest path
-	## From the recieved tables broadcasted by all routers
 	def shortestPath(self, imported, routerID):
+		self.routes = self.table
+
 		## Using empty dictionary generate shortest path table
 		for node in list(map(chr, range(97,103))):
-			if node in self.routes and node in imported:
-				if float(self.routes[node]) > float(imported[node]):
-					self.routes[node] = float(imported[node])
-			elif node in imported and routerID in self.table:
-				# Adds distance from router + node distance
-				self.routes[node] = float(imported[node]) + float(self.table[routerID])
+			if node == routerID:
+				continue
+			
+			if node in imported and imported[node] != 16.0:
+				if float(self.routes[node]) > (float(imported[node]) + float(self.routes[routerID])):
+					self.routes[node] = float(imported[node]) + float(self.routes[routerID])
 
-			# Path not defined
-			path = {}
-			#if self.routes[node] == 16:
-				
+			if node in imported and float(self.routes[node]) == 16.0:
+				# Adds distance from router + node distance
+				self.routes[node] = float(imported[node]) + float(self.routes[routerID])
 	
 	## Finds the smallest cost	
 	def cost(self):
@@ -80,7 +80,6 @@ class Router:
 			key, addr = self.sock.recvfrom(512)
 			if not key.decode == '1':
 				dictionary = self.binaryToTable(key)
-
 		except socket.timeout as e:
 			print(self.id, "Nothing recieved")
 
@@ -99,12 +98,11 @@ class Router:
 			table = self.tableToBinary()
 			self.sock.sendto(table, server)
 
-
 	def run(self):
 		update = 0
 		while 1:
 			try:
-				node = ''
+				self.path = {}
 				self.readFile()
 				start = time.time()
 				received = 0
@@ -114,6 +112,7 @@ class Router:
 					received += 1
 				for node in self.routes:
 					print(self.id, "->", node, "with cost", self.table[node])
+
 				update += 1
 				time.sleep(15)	# Timeout
 			except KeyboardInterrupt:
