@@ -61,7 +61,7 @@ class Router:
 			if node in imported and imported[node] != 16.0:
 				if float(self.routes[node]) > (float(imported[node]) + float(self.routes[routerID])):
 					self.routes[node] = float(imported[node]) + float(self.routes[routerID])
-			if node in imported and float(self.routes[node]) == 16.0:
+			if node in imported and float(self.routes[node]) == 16.0 and  float(imported[node]) != 16.0:
 				# Adds distance from router + node distance
 				self.routes[node] = float(imported[node]) + float(self.routes[routerID])
 	
@@ -90,10 +90,10 @@ class Router:
 
 	def run(self):
 		update = 0
+		self.readFile()
 		while 1:
 			try:
 				self.path = {}
-				self.readFile()
 				start = time.time()
 				received = 0
 				# Timed loop instead of timeout
