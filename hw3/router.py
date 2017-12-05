@@ -1,3 +1,4 @@
+# Author:	Trevon and Gabon Williams
 import socket
 import time
 import json
