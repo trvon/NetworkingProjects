@@ -1,7 +1,0 @@
-Project 3
-
-Implements a distance vector algorithm to find the shortest path of graph build from files with the files folder
-
-*Note
-Utilizes 8 cores for simulating a router in parallel
-  - Multiprocessing python 3 library
