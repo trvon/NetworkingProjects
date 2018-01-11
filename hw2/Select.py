@@ -12,7 +12,7 @@ class Select_client:
 		self.file = filename
 		self.seqLen = 4 				# bits
 		self.timer = 2					# seconds
-		self.term = 0.01 				# seconds
+		self.term = 0.05 				# seconds
 		self.port = int(port)
 		self.host = ''					# localhost
 
@@ -142,8 +142,8 @@ class SenderWindowManager(object):
 		currentTime = time.time()
 		result = [ ]
 		index = 0
-		while( index < len(self.timerArray) ):
-			if( self.timer < (currentTime - self.timerArray[index]) ):
+		while( index < len(self.timerArray) and index < self.windowSize):
+			if( self.timer < (currentTime - self.timerArray[index]) and not self.sequenceArray[index]):
 				print "WindowNumber", index, " resent"
 				result.append(self.packetArray[index])
 				self.timerArray[index] = currentTime

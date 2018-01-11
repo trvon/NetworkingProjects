@@ -12,8 +12,8 @@ class Go_client:
 		self.file = filename
 		self.rano = 0
 		self.seqLen = 4 				#bits
-		self.timer = 3					#seconds
-		self.term = 0.01 				#seconds
+		self.timer = 2					#seconds
+		self.term = 3 					#seconds
 		self.port = int(port)
 		self.host = ''
 
@@ -133,7 +133,9 @@ class SenderWindowManager(object):
 		print "Ack ", ackNumber
 		if (ackNumber == 0):
 			self.sequenceArray[ackNumber] = True
+			self.index = 0
 		elif self.sequenceArray[ackNumber - 1]:
+			self.index = ackNumber
 			self.sequenceArray[ackNumber] = True
 
 	def binaryToDecimal(self, binaryString):
@@ -142,16 +144,14 @@ class SenderWindowManager(object):
 	def packetToResend(self):
 		currentTime = time.time()
 		result = [ ]
-		index = 0
-		while(self.sequenceArray[index]):
-			index += 1
+		self.index = 0
 			
-		while( index < len(self.timerArray) ):
-			if( self.timer < (currentTime - self.timerArray[index]) ):
-				print "WindowNumber", index, " resent"
-				result.append(self.packetArray[index])
-				self.timerArray[index] = currentTime
-			index += 1
+		while( self.index < len(self.timerArray) ):
+			if( self.timer < (currentTime - self.timerArray[self.index])):
+				print "WindowNumber", self.index, " resent"
+				result.append(self.packetArray[self.index])
+				self.timerArray[self.index] = currentTime
+			self.index += 1
 		return result
 
 	def existBuffer(self):
